@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mercado Pro | Gestão Completa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4caf50;
+            --sidebar: #2c3136;
+            --sidebar-item: #3e444a;
+            --bg: #f4f7f6;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #3498db;
+            --shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { display: flex; height: 100vh; background: var(--bg); overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 280px; background: var(--sidebar); color: white; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 30px 25px; font-size: 1.5rem; font-weight: 800; border-bottom: 1px solid #3e444a; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+        .nav-item { padding: 18px 25px; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.3s; color: #bdc3c7; border-left: 5px solid transparent; }
+        .nav-item:hover, .nav-item.active { background: var(--sidebar-item); color: white; border-left-color: var(--primary); }
+
+        /* Content */
+        .main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .top-nav { padding: 20px 40px; background: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .view-section { padding: 30px 40px; display: none; animation: fadeIn 0.4s ease; }
+        .view-section.active { display: block; }
+
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 25px; border-radius: 15px; box-shadow: var(--shadow); text-align: center; border-bottom: 4px solid var(--primary); }
+        .stat-card i { font-size: 1.8rem; color: var(--primary); margin-bottom: 10px; }
+        .stat-card h3 { font-size: 0.9rem; color: #666; text-transform: uppercase; margin-bottom: 5px; }
+        .stat-card p { font-size: 1.6rem; font-weight: bold; }
+
+        /* Tables */
+        .card-table { background: white; padding: 25px; border-radius: 15px; box-shadow: var(--shadow); margin-bottom: 20px; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .data-table th { text-align: left; padding: 12px; background: #f8f9fa; font-size: 0.85rem; color: #666; border-bottom: 2px solid #eee; }
+        .data-table td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: middle; font-size: 0.9rem; }
+        
+        /* Etiquetas Movimentação */
+        .tag-mov { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+        .mov-entrada { background: #e8f5e9; color: #2e7d32; }
+        .mov-saida { background: #ffebee; color: #c62828; }
+        .mov-ajuste { background: #e3f2fd; color: #1565c0; }
+
+        .prod-img { width: 45px; height: 45px; border-radius: 8px; object-fit: cover; border: 1px solid #ddd; }
+        .tag { background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+        .tag-promo { background: #fff3e0; color: #ef6c00; }
+
+        /* PDV */
+        .pos-grid { display: grid; grid-template-columns: 1fr 380px; gap: 25px; }
+        .shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; max-height: 70vh; overflow-y: auto; padding: 5px; }
+        .item-card { background: white; padding: 15px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.2s; box-shadow: var(--shadow); position: relative; }
+        .item-card:hover { transform: translateY(-5px); border: 2px solid var(--primary); }
+        .item-card img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
+        .badge-promo { position: absolute; top: 5px; right: 5px; background: var(--danger); color: white; font-size: 0.6rem; padding: 3px 6px; border-radius: 20px; }
+
+        /* Cart */
+        .cart-box { background: var(--sidebar); color: white; padding: 25px; border-radius: 15px; min-height: 500px; display: flex; flex-direction: column; }
+        .cart-items { flex: 1; overflow-y: auto; margin-bottom: 20px; }
+        .cart-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #444; font-size: 0.9rem; align-items: center; }
+        .btn-remove { background: none; border: none; color: var(--danger); cursor: pointer; }
+
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-green { background: var(--primary); color: white; width: 100%; font-size: 1.1rem; }
+        .btn-green:hover { filter: brightness(1.1); }
+        .btn-outline { background: none; border: 1px solid #ddd; color: #666; margin-left: 5px; }
+        .btn-outline:hover { background: #eee; }
+
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-end; }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px; }
+        .filter-group label { font-size: 0.75rem; font-weight: bold; color: #666; }
+        .filter-input { padding: 10px; border-radius: 8px; border: 1px solid #ddd; outline: none; width: 100%; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header"><i class="fas fa-boxes-stacked"></i> MERCADO PRO</div>
+        <div class="nav-item active" onclick="nav('dashboard')"><i class="fas fa-chart-pie"></i> DASHBOARD</div>
+        <div class="nav-item" onclick="nav('inventario')"><i class="fas fa-list"></i> INVENTÁRIO </div>
+        <div class="nav-item" onclick="nav('vendas')"><i class="fas fa-cash-register"></i> VENDAS</div>
+        <div class="nav-item" onclick="nav('promocoes')"><i class="fas fa-tag"></i> PROMOÇÕES</div>
+        <div class="nav-item" onclick="nav('fidelidade')"><i class="fas fa-star"></i> FIDELIDADE</div>
+        <div class="nav-item" onclick="nav('correcoes')"><i class="fas fa-screwdriver-wrench"></i> CORREÇÕES</div>
+        <div class="nav-item" onclick="nav('historico')"><i class="fas fa-clock-rotate-left"></i> HISTÓRICO</div>
+        <div class="nav-item" onclick="nav('relatorios')"><i class="fas fa-file-invoice"></i> RELATÓRIOS</div>
+    </aside>
+
+    <main class="main">
+        <header class="top-nav">
+            <h2 id="page-title">Painel Administrativo</h2>
+            <div id="status-online" style="color: var(--primary); font-weight: 600;"><i class="fas fa-sync fa-spin"></i> Online</div>
+        </header>
+
+        <section id="dashboard" class="view-section active">
+            <div class="stats-grid">
+                <div class="stat-card"><i class="fas fa-coins"></i><h3>Faturamento</h3><p id="dash-money">R$ 0,00</p></div>
+                <div class="stat-card"><i class="fas fa-box"></i><h3>Itens Estoque</h3><p id="dash-qty">0</p></div>
+                <div class="stat-card"><i class="fas fa-percent"></i><h3>Ofertas Ativas</h3><p id="dash-promo">0</p></div>
+                <div class="stat-card"><i class="fas fa-users"></i><h3>Membros Clube</h3><p id="dash-members">0</p></div>
+            </div>
+            <div class="card-table">
+                <h3>Resumo de Vendas Diárias</h3>
+                <canvas id="salesChart" height="100"></canvas>
+            </div>
+        </section>
+
+        <section id="inventario" class="view-section">
+            <div class="card-table">
+                <div class="filter-bar">
+                    <input type="text" id="searchInput" class="filter-input" placeholder="Buscar por nome, código ou fornecedor..." onkeyup="filterInventory()" style="flex:2;">
+                    
+                    <select id="filterCategory" class="filter-input" onchange="filterInventory()" style="flex:1;">
+                        <option value="">Todas Categorias</option>
+                        <option value="Grãos">Grãos</option>
+                        <option value="Laticínios">Laticínios</option>
+                        <option value="Matinal">Matinal</option>
+                        <option value="Mercearia">Mercearia</option>
+                    </select>
+
+                    <select id="sortOrder" class="filter-input" onchange="filterInventory()" style="flex:1;">
+                        <option value="name">Ordenar por Nome</option>
+                        <option value="qty">Menor Estoque</option>
+                        <option value="expiry">Vencimento Próximo</option>
+                    </select>
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Foto</th>
+                            <th>Produto / Código</th>
+                            <th>Categoria</th>
+                            <th>Fornecedor</th>
+                            <th>Validade</th>
+                            <th>Qtd</th>
+                            <th>Status</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-list"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="relatorios" class="view-section">
+            <div class="card-table">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                    <h3>Relatórios de Histórico de Estoque</h3>
+                    <div>
+                        <button class="btn btn-outline" onclick="exportSim('PDF')"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+                        <button class="btn btn-outline" onclick="exportSim('Excel')"><i class="fas fa-file-excel"></i> Exportar Excel</button>
+                    </div>
+                </div>
+
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label>Início</label>
+                        <input type="date" id="rep-date-start" class="filter-input" onchange="filterReport()">
+                    </div>
+                    <div class="filter-group">
+                        <label>Fim</label>
+                        <input type="date" id="rep-date-end" class="filter-input" onchange="filterReport()">
+                    </div>
+                    <div class="filter-group">
+                        <label>Produto</label>
+                        <input type="text" id="rep-product" class="filter-input" placeholder="Nome do produto..." onkeyup="filterReport()">
+                    </div>
+                    <div class="filter-group">
+                        <label>Fornecedor</label>
+                        <input type="text" id="rep-provider" class="filter-input" placeholder="Filtrar fornecedor..." onkeyup="filterReport()">
+                    </div>
+                    <div class="filter-group">
+                        <label>Usuário</label>
+                        <input type="text" id="rep-user" class="filter-input" placeholder="Quem movimentou..." onkeyup="filterReport()">
+                    </div>
+                    <div class="filter-group">
+                        <label>Categoria</label>
+                        <select id="rep-cat" class="filter-input" onchange="filterReport()">
+                            <option value="">Todas</option>
+                            <option value="Grãos">Grãos</option>
+                            <option value="Laticínios">Laticínios</option>
+                            <option value="Matinal">Matinal</option>
+                            <option value="Mercearia">Mercearia</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Tipo</label>
+                        <select id="rep-type" class="filter-input" onchange="filterReport()">
+                            <option value="">Todos</option>
+                            <option value="ENTRADA">Entrada</option>
+                            <option value="SAÍDA">Saída</option>
+                            <option value="AJUSTE">Ajuste</option>
+                        </select>
+                    </div>
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Produto</th>
+                            <th>Fornecedor</th>
+                            <th>Tipo</th>
+                            <th>Qtd</th>
+                            <th>Usuário</th>
+                            <th>Unidade</th>
+                        </tr>
+                    </thead>
+                    <tbody id="report-list"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="vendas" class="view-section">
+            <div class="pos-grid">
+                <div class="shelf" id="pos-shelf"></div>
+                <div class="cart-box">
+                    <h3>Carrinho Atual</h3>
+                    <select id="select-member" class="filter-input" style="background:#3e444a; color:white; border:none; margin:10px 0;">
+                        <option value="">Consumidor Comum</option>
+                    </select>
+                    <div class="cart-items" id="cart-list"></div>
+                    <div style="font-size:1.8rem; font-weight:bold; margin-bottom:15px; display:flex; justify-content:space-between;">
+                        <span>Total:</span> <span id="cart-total">R$ 0,00</span>
+                    </div>
+                    <button class="btn btn-green" onclick="checkout()">FINALIZAR COMPRA</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="promocoes" class="view-section">
+            <div class="card-table">
+                <h3>Gerenciar Promoções Ativas (Desconto de 15%)</h3>
+                <div id="promo-list" style="margin-top:20px; display:grid; grid-template-columns:1fr 1fr; gap:15px;"></div>
+            </div>
+        </section>
+
+        <section id="fidelidade" class="view-section">
+            <div class="card-table">
+                <h3>Clube de Fidelidade (Membros)</h3>
+                <table class="data-table">
+                    <thead><tr><th>Nome</th><th>Pontos</th><th>Nível</th></tr></thead>
+                    <tbody id="member-list"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="correcoes" class="view-section">
+            <div class="card-table">
+                <h3>Ajustes e Correções Manuais</h3>
+                <div id="correction-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:15px;"></div>
+            </div>
+        </section>
+
+        <section id="historico" class="view-section">
+            <div class="card-table">
+                <h3>Registro de Transações</h3>
+                <table class="data-table">
+                    <thead><tr><th>ID</th><th>Data/Hora</th><th>Itens</th><th>Valor Total</th></tr></thead>
+                    <tbody id="history-list"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let inventory = [
+            { id: '#001', name: 'Arroz Tio João 5kg', price: 29.90, originalPrice: 29.90, qty: 45, img: 'https://gigavc.vtexassets.com/arquivos/ids/156157/68fe62a63f9050264b7b2cb8.jpg?v=638970986779070000', promo: false, category: 'Grãos', provider: 'Tio João Corp', expiry: '2025-12-10' },
+            { id: '#002', name: 'Feijão Carioca 1kg', price: 8.50, originalPrice: 8.50, qty: 8, img: 'https://www.monpetitbresil.com/cdn/shop/products/image_jpg.png?v=1677317103', promo: true, category: 'Grãos', provider: 'Feijão Sul', expiry: '2025-08-20' },
+            { id: '#003', name: 'Leite Integral 1L', price: 5.40, originalPrice: 5.40, qty: 120, img: 'https://media3.proteste.org.br//images/519002C0308A51A16355B7A2520B51DBACCAD0A0/h300-c4/Leite-Integral-UHT-ITALAC-LEITE-INTEGRAL-UHT.jpg', promo: false, category: 'Laticínios', provider: 'LactaVila', expiry: '2026-01-15' },
+            { id: '#004', name: 'Café Melitta 500g', price: 18.90, originalPrice: 18.90, qty: 35, img: 'https://fortatacadista.vteximg.com.br/arquivos/ids/205367-800-800/7891021006125_1_1_1200_72_RGB.jpg?v=637448396536500000', promo: false, category: 'Matinal', provider: 'Melitta BR', expiry: '2026-05-30' },
+            { id: '#005', name: 'Azeite Extra Virgem', price: 38.00, originalPrice: 38.00, qty: 15, img: 'https://coopsp.vtexassets.com/arquivos/ids/217775-800-auto?v=637919541040870000&width=800&height=auto&aspect=true', promo: true, category: 'Mercearia', provider: 'Gallo', expiry: '2027-02-10' },
+            { id: '#006', name: 'Macarrão Espaguete', price: 4.50, originalPrice: 4.50, qty: 60, img: 'https://marcafortaleza.com.br/wp-content/uploads/2018/09/mkp_MDIAS_FORTALEZA_IMPERADOR_ESPAGUETE_400g_300dpi-removebg-preview-1.png', promo: false, category: 'Mercearia', provider: 'Massas It', expiry: '2025-11-05' },
+            { id: '#007', name: 'Açúcar Refinado 1kg', price: 4.20, originalPrice: 4.20, qty: 45, img: 'https://m.media-amazon.com/images/I/51hqZo7fb0L._AC_UF894,1000_QL80_.jpg', promo: false, category: 'Mercearia', provider: 'União', expiry: '2026-03-22' },
+            { id: '#008', name: 'Óleo de Soja 900ml', price: 7.20, originalPrice: 7.20, qty: 4, img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYeuavmf13-CKwspMb9pom9w_2m4EVJwKCDw&s', promo: false, category: 'Mercearia', provider: 'Liza', expiry: '2025-09-12' },
+            { id: '#009', name: 'Bolacha Negresco', price: 2.90, originalPrice: 2.90, qty: 100, img: 'https://images.tcdn.com.br/img/img_prod/1251271/biscoito_recheado_nestle_negresco_90g_481_1_10c51ae7201ab07dfea4093cb90054d0.png', promo: true, category: 'Matinal', provider: 'Nestlé', expiry: '2025-07-01' },
+            { id: '#010', name: 'Chocolate Negresco', price: 6.50, originalPrice: 6.50, qty: 25, img: 'https://prezunic.vtexassets.com/arquivos/ids/176188-800-auto?v=638306627005300000&width=800&height=auto&aspect=true', promo: false, category: 'Matinal', provider: 'Garoto', expiry: '2026-08-15' }
+        ];
+
+        let movements = [
+            { date: '2026-02-10 10:30', product: 'Arroz Tio João 5kg', provider: 'Tio João Corp', cat: 'Grãos', type: 'ENTRADA', qty: 50, user: 'Admin', unit: 'Matriz' },
+            { date: '2026-02-11 14:20', product: 'Leite Integral 1L', provider: 'LactaVila', cat: 'Laticínios', type: 'SAÍDA', qty: 5, user: 'Caixa_01', unit: 'Matriz' },
+            { date: '2026-02-11 16:00', product: 'Feijão Carioca 1kg', provider: 'Feijão Sul', cat: 'Grãos', type: 'AJUSTE', qty: 2, user: 'Gerente', unit: 'Filial Sul' }
+        ];
+
+        let members = [
+            { name: 'João Silva', points: 1250, level: 'Ouro' },
+            { name: 'Maria Souza', points: 450, level: 'Bronze' }
+        ];
+
+        let cart = [];
+        let salesHistory = [];
+        let totalCash = 0;
+
+        function nav(id) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(v => v.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.getElementById('page-title').innerText = id.charAt(0).toUpperCase() + id.slice(1);
+            event.currentTarget.classList.add('active');
+            renderAll();
+        }
+
+        // FUNCIONALIDADE REQ005 - FILTRO DE DATAS E OUTROS
+        function filterReport() {
+            const startVal = document.getElementById('rep-date-start').value;
+            const endVal = document.getElementById('rep-date-end').value;
+            const prod = document.getElementById('rep-product').value.toLowerCase();
+            const prov = document.getElementById('rep-provider').value.toLowerCase();
+            const user = document.getElementById('rep-user').value.toLowerCase();
+            const cat = document.getElementById('rep-cat').value;
+            const type = document.getElementById('rep-type').value;
+
+            const filtered = movements.filter(m => {
+                // Converte a data do movimento (YYYY-MM-DD) para comparação
+                const mDateStr = m.date.split(' ')[0].split('/').reverse().join('-'); 
+                const mDate = m.date.includes('/') ? mDateStr : m.date.split(' ')[0];
+
+                const matchStart = !startVal || mDate >= startVal;
+                const matchEnd = !endVal || mDate <= endVal;
+                const matchProd = m.product.toLowerCase().includes(prod);
+                const matchProv = m.provider.toLowerCase().includes(prov);
+                const matchUser = m.user.toLowerCase().includes(user);
+                const matchCat = !cat || m.cat === cat;
+                const matchType = !type || m.type === type;
+                
+                return matchStart && matchEnd && matchProd && matchProv && matchUser && matchCat && matchType;
+            });
+
+            document.getElementById('report-list').innerHTML = filtered.map(m => `
+                <tr>
+                    <td>${m.date}</td>
+                    <td>${m.product}</td>
+                    <td><small>${m.provider}</small></td>
+                    <td><span class="tag-mov ${m.type === 'ENTRADA' ? 'mov-entrada' : m.type === 'SAÍDA' ? 'mov-saida' : 'mov-ajuste'}">${m.type}</span></td>
+                    <td>${m.qty} un</td>
+                    <td>${m.user}</td>
+                    <td>${m.unit}</td>
+                </tr>
+            `).join('');
+        }
+
+        function exportSim(format) {
+            alert(`Relatório exportado com sucesso em formato ${format}!`);
+        }
+
+        function filterInventory() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const categoryTerm = document.getElementById('filterCategory').value;
+            const sortBy = document.getElementById('sortOrder').value;
+
+            let filtered = inventory.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(searchTerm) || 
+                                      p.id.toLowerCase().includes(searchTerm) || 
+                                      p.provider.toLowerCase().includes(searchTerm);
+                const matchesCategory = categoryTerm === "" || p.category === categoryTerm;
+                return matchesSearch && matchesCategory;
+            });
+
+            filtered.sort((a, b) => {
+                if (sortBy === 'qty') return a.qty - b.qty;
+                if (sortBy === 'expiry') return new Date(a.expiry) - new Date(b.expiry);
+                return a.name.localeCompare(b.name);
+            });
+
+            const invList = document.getElementById('inventory-list');
+            invList.innerHTML = filtered.map(p => `
+                <tr>
+                    <td><img src="${p.img}" class="prod-img"></td>
+                    <td><b>${p.name}</b><br><small>${p.id}</small></td>
+                    <td><span class="tag">${p.category}</span> ${p.promo ? '<span class="tag tag-promo">Oferta</span>' : ''}</td>
+                    <td>${p.provider}</td>
+                    <td>${new Date(p.expiry).toLocaleDateString('pt-BR')}</td>
+                    <td>${p.qty} un</td>
+                    <td><span style="color:${p.qty < 10 ? 'red' : 'green'}; font-weight:bold">${p.qty < 10 ? 'BAIXO' : 'OK'}</span></td>
+                    <td><button onclick="addToCart('${p.id}')" style="background:none; border:none; color:var(--primary); cursor:pointer;"><i class="fas fa-cart-plus fa-xl"></i></button></td>
+                </tr>
+            `).join('');
+        }
+
+        function renderAll() {
+            document.getElementById('dash-money').innerText = `R$ ${totalCash.toFixed(2)}`;
+            document.getElementById('dash-qty').innerText = inventory.reduce((a,b) => a + b.qty, 0);
+            document.getElementById('dash-promo').innerText = inventory.filter(p => p.promo).length;
+            document.getElementById('dash-members').innerText = members.length;
+
+            filterInventory();
+            filterReport(); 
+
+            document.getElementById('pos-shelf').innerHTML = inventory.map(p => `
+                <div class="item-card" onclick="addToCart('${p.id}')">
+                    ${p.promo ? '<div class="badge-promo">PROMO</div>' : ''}
+                    <img src="${p.img}">
+                    <h4>${p.name}</h4>
+                    <b style="color:var(--primary)">R$ ${p.price.toFixed(2)}</b>
+                    <div style="font-size:0.7rem; color:#888">Estoque: ${p.qty} | Cat: ${p.category}</div>
+                </div>
+            `).join('');
+
+            const selectM = document.getElementById('select-member');
+            selectM.innerHTML = '<option value="">Consumidor Comum</option>' + members.map(m => `
+                <option value="${m.name}">${m.name} (${m.level})</option>
+            `).join('');
+
+            document.getElementById('member-list').innerHTML = members.map(m => `
+                <tr><td>${m.name}</td><td>${m.points} pts</td><td><b>${m.level}</b></td></tr>
+            `).join('');
+
+            document.getElementById('promo-list').innerHTML = inventory.map(p => `
+                <div class="item-card" style="display:flex; justify-content:space-between; align-items:center; border-left:5px solid ${p.promo ? 'var(--warning)' : '#ccc'}">
+                    <div style="text-align:left">
+                        <span>${p.name}</span><br>
+                        <small>Preço: R$ ${p.price.toFixed(2)}</small>
+                    </div>
+                    <button class="btn" onclick="togglePromo('${p.id}')" style="width:auto; padding:5px 10px; background:${p.promo ? 'red' : 'green'}; color:white">
+                        ${p.promo ? 'Desativar' : 'Ativar Promo'}
+                    </button>
+                </div>
+            `).join('');
+
+            document.getElementById('correction-list').innerHTML = inventory.map(p => `
+                <div class="item-card">
+                    <h5>${p.name}</h5>
+                    <div style="margin-top:10px;">
+                        <button onclick="adjust('${p.id}', -1)" style="padding:5px 10px;">-1</button>
+                        <span style="margin:0 10px; font-weight:bold">${p.qty}</span>
+                        <button onclick="adjust('${p.id}', 1)" style="padding:5px 10px;">+1</button>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('history-list').innerHTML = salesHistory.map(s => `
+                <tr>
+                    <td>${s.id}</td><td>${s.date}</td><td>${s.itemsCount} itens</td><td><b>R$ ${s.val.toFixed(2)}</b></td>
+                </tr>
+            `).join('');
+        }
+
+        function addToCart(id) {
+            const p = inventory.find(x => x.id === id);
+            if(p.qty > 0) {
+                cart.push({id: p.id, name: p.name, price: p.price});
+                p.qty--;
+                updateCart();
+                renderAll();
+            } else { alert("Produto esgotado!"); }
+        }
+
+        function checkout() {
+            if(cart.length === 0) return alert("Carrinho vazio!");
+            const val = cart.reduce((a,b) => a + b.price, 0);
+            
+            cart.forEach(item => {
+                const prod = inventory.find(i => i.id === item.id);
+                movements.unshift({
+                    date: new Date().toLocaleString('pt-BR').replace(',', ''),
+                    product: item.name,
+                    provider: prod.provider,
+                    cat: prod.category,
+                    type: 'SAÍDA',
+                    qty: 1,
+                    user: 'Caixa_PDV',
+                    unit: 'Matriz'
+                });
+            });
+
+            totalCash += val;
+            salesHistory.unshift({ id: 'VND-' + Math.floor(Math.random()*9000), date: new Date().toLocaleString('pt-BR'), itemsCount: cart.length, val: val });
+            cart = [];
+            updateCart();
+            renderAll();
+            alert("Venda e histórico atualizados!");
+        }
+
+        function adjust(id, val) {
+            const p = inventory.find(x => x.id === id);
+            if(p.qty + val >= 0) {
+                p.qty += val;
+                movements.unshift({
+                    date: new Date().toLocaleString('pt-BR').replace(',', ''),
+                    product: p.name,
+                    provider: p.provider,
+                    cat: p.category,
+                    type: 'AJUSTE',
+                    qty: Math.abs(val),
+                    user: 'Admin',
+                    unit: 'Matriz'
+                });
+                renderAll();
+            }
+        }
+
+        function updateCart() {
+            const list = document.getElementById('cart-list');
+            list.innerHTML = cart.map((item, idx) => `
+                <div class="cart-row"><span>${item.name}</span><b>R$ ${item.price.toFixed(2)}</b></div>
+            `).join('');
+            document.getElementById('cart-total').innerText = `R$ ${cart.reduce((a,b) => a + b.price, 0).toFixed(2)}`;
+        }
+
+        function togglePromo(id) {
+            const p = inventory.find(x => x.id === id);
+            p.promo = !p.promo;
+            p.price = p.promo ? p.originalPrice * 0.85 : p.originalPrice;
+            renderAll();
+        }
+
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'],
+                datasets: [{ label: 'Vendas', data: [1200, 1900, 1500, 2500, 2200, 3100, 2800], borderColor: '#4caf50', fill: true, tension: 0.4 }]
+            }
+        });
+
+        renderAll();
+    </script>
+</body>
+</html>
