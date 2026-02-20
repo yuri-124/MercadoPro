@@ -1,0 +1,16 @@
+Overview
+O Sistema de Gestão de Mercado é uma aplicação voltada para a automação e controle operacional de redes de varejo. O projeto foi desenvolvido para centralizar o gerenciamento de inventário, garantindo que a entrada e saída de produtos sejam registradas com precisão e que a equipe administrativa tenha visão em tempo real da saúde do estoque.
+
+Principais Características Implementadas:
+
+Interface Web Centralizada (p1): Um painel intuitivo que consolida o acesso a todas as ferramentas de gestão.
+
+Gestão de Inventário (REQ001): Controle total de produtos, categorias e quantidades.
+
+Fluxo de Mercadorias (REQ002 e REQ003): Registro sistemático de entradas (com nota fiscal) e saídas (vendas e descartes), alimentando automaticamente o histórico.
+
+Monitoramento de Validade (REQ007): Identificação automática de produtos próximos ao vencimento para aplicação de promoções preventivas.
+
+Relatórios Administrativos (REQ005): Geração de históricos de movimentação filtráveis para tomada de decisão.
+
+Detalhamento de Produtos (REQ014): Visualização técnica completa de cada item, incluindo dados nutricionais e localização física.
