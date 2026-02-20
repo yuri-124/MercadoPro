@@ -1,4 +1,5 @@
 Market Management System 
+
 📌 Overview
 The Market Management System is an integrated digital ecosystem designed for retail chains.
 It streamlines inventory control, automates expiration-date promotions, and strengthens customer loyalty through a rewards program and support chatbot.
